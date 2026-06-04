@@ -1,0 +1,16 @@
+{
+  "teams": [
+    { "name": "Mercedes", "drivers": [] },
+    { "name": "Redbull", "drivers": [] },
+    { "name": "Ferrari", "drivers": [] },
+    { "name": "McLaren", "drivers": [] },
+    { "name": "Aston Martin", "drivers": [] },
+    { "name": "Haas", "drivers": [] },
+    { "name": "Williams", "drivers": [] },
+    { "name": "Audi", "drivers": [] },
+    { "name": "Alpine", "drivers": [] },
+    { "name": "VCARB", "drivers": [] },
+    { "name": "Cadillac", "drivers": [] }
+  ],
+  "races": []
+}
