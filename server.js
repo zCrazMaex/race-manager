@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 
-const DB_PATH = path.join(__dirname, "data/db.json");
+const DB_PATH = path.join(__dirname, "db.json");
 
 function loadDB() {
   return JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
