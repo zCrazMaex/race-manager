@@ -97,9 +97,9 @@ app.post("/results/update", (req, res) => {
   const row = race.results.find(r => r.start == start);
   if (!row) return res.json({ ok: false });
 
-  row.position = Number(position);
-  if (team) row.team = team;
-  if (driver) row.driver = driver;
+  if (position !== undefined) row.position = Number(position);
+  if (team !== undefined) row.team = team;
+  if (driver !== undefined) row.driver = driver;
 
   saveData(data);
   res.json({ ok: true });
