@@ -1,106 +1,132 @@
 const express = require("express");
-const db = require("./db");
+const fs = require("fs-extra");
+const path = require("path");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
+const DATA_FILE = path.join(__dirname, "data.json");
+
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static("public"));
 
-app.get("/", (req, res) => {
-  res.redirect("/drivers");
-});
+function loadData() {
+  return fs.readJsonSync(DATA_FILE);
+}
 
-/* ---------------- HOME ---------------- */
-app.get("/", (req, res) => {
-  res.render("index");
-});
+function saveData(data) {
+  fs.writeJsonSync(DATA_FILE, data, { spaces: 2 });
+}
 
-/* ---------------- TEAMS ---------------- */
-app.post("/teams/add", (req, res) => {
-  db.run("INSERT INTO teams (name) VALUES (?)", [req.body.name]);
-  res.redirect("/drivers");
-});
+/* ---------------- INIT ---------------- */
 
-/* ---------------- DRIVERS ---------------- */
+function initRaces(data) {
+  if (!data.races || data.races.length === 0) {
+    data.races = Array.from({ length: 28 }, (_, i) => ({
+      id: i + 1,
+      results: Array.from({ length: 22 }, (_, p) => ({
+        start: p + 1,
+        team: "",
+        driver: "",
+        position: null
+      }))
+    }));
+  }
+}
+
+/* ---------------- ROUTES ---------------- */
+
+app.get("/", (req, res) => res.redirect("/drivers"));
+
 app.get("/drivers", (req, res) => {
-  db.all("SELECT * FROM drivers", (err, rows) => {
-    res.render("drivers", { drivers: rows });
-  });
+  const data = loadData();
+  res.render("drivers", { teams: data.teams });
 });
+
+app.get("/grid", (req, res) => {
+  const data = loadData();
+  initRaces(data);
+  res.render("grid", { races: data.races });
+});
+
+app.get("/results", (req, res) => {
+  const data = loadData();
+  initRaces(data);
+  res.render("results", { races: data.races });
+});
+
+/* ---------------- DRIVER API ---------------- */
 
 app.post("/drivers/add", (req, res) => {
-  db.run(
-    "INSERT INTO drivers (name, team_id) VALUES (?, ?)",
-    [req.body.name, req.body.team_id]
-  );
-  res.redirect("/drivers");
+  const data = loadData();
+  const { team, driver } = req.body;
+
+  const t = data.teams.find(x => x.name === team);
+  if (t && driver) t.drivers.push(driver);
+
+  saveData(data);
+  res.json({ ok: true });
 });
 
 app.post("/drivers/delete", (req, res) => {
-  db.run("DELETE FROM drivers WHERE id = ?", [req.body.id]);
-  res.redirect("/drivers");
+  const data = loadData();
+  const { team, driver } = req.body;
+
+  const t = data.teams.find(x => x.name === team);
+  if (t) t.drivers = t.drivers.filter(d => d !== driver);
+
+  saveData(data);
+  res.json({ ok: true });
 });
 
-/* ---------------- RACE INPUT ---------------- */
-app.get("/race", (req, res) => {
-  db.all("SELECT * FROM drivers", (err, drivers) => {
-    res.render("race", { drivers });
-  });
+/* ---------------- RESULT UPDATE ---------------- */
+
+app.post("/results/update", (req, res) => {
+  const data = loadData();
+  const { raceId, start, position, team, driver } = req.body;
+
+  const race = data.races.find(r => r.id == raceId);
+  if (!race) return res.json({ ok: false });
+
+  const row = race.results.find(r => r.start == start);
+  if (!row) return res.json({ ok: false });
+
+  row.position = Number(position);
+  if (team) row.team = team;
+  if (driver) row.driver = driver;
+
+  saveData(data);
+  res.json({ ok: true });
 });
 
-app.post("/race/save", (req, res) => {
+/* ---------------- NEXT GRID ---------------- */
 
-  const raceId = Date.now();
+app.post("/grid/generate/:raceId", (req, res) => {
+  const data = loadData();
+  const raceId = Number(req.params.raceId);
 
-  db.all(`
-    SELECT * FROM drivers
-  `, (err, drivers) => {
+  const race = data.races.find(r => r.id === raceId);
+  const next = data.races.find(r => r.id === raceId + 1);
 
-    drivers.forEach(d => {
-      const pos = req.body[`pos_${d.id}`];
+  if (!race || !next) return res.json({ ok: false });
 
-      db.run(
-        "INSERT INTO results (race_id, driver_id, position) VALUES (?, ?, ?)",
-        [raceId, d.id, pos]
-      );
-    });
+  const sorted = [...race.results]
+    .filter(r => r.position)
+    .sort((a, b) => a.position - b.position);
 
-    // GRID GENERATION (FULL REVERSE 1-22)
-    db.all(
-      "SELECT * FROM results WHERE race_id = ? ORDER BY position ASC",
-      [raceId],
-      (err, rows) => {
+  next.results = sorted.map((r, i) => ({
+    start: i + 1,
+    team: r.team,
+    driver: r.driver,
+    position: null
+  }));
 
-        const reversed = rows
-          .sort((a,b) => a.position - b.position)
-          .reverse();
-
-        const nextRaceId = raceId + 1;
-
-        reversed.forEach((r, i) => {
-          db.run(
-            "INSERT INTO grid (race_id, driver_id, position) VALUES (?, ?, ?)",
-            [nextRaceId, r.driver_id, i + 1]
-          );
-        });
-
-        res.redirect("/grid/" + nextRaceId);
-      }
-    );
-
-  });
-
+  saveData(data);
+  res.json({ ok: true });
 });
 
-/* ---------------- GRID ---------------- */
-app.get("/grid/:id", (req, res) => {
-  db.all(
-    "SELECT * FROM grid WHERE race_id = ? ORDER BY position ASC",
-    [req.params.id],
-    (err, rows) => {
-      res.render("grid", { grid: rows });
-    }
-  );
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
 });
-
-app.listen(3000, () => console.log("Server läuft auf Port 3000"));
