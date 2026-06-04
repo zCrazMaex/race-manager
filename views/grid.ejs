@@ -1,0 +1,24 @@
+<nav>
+  <a href="/drivers">Fahrer</a> |
+  <a href="/race">Rennen</a> |
+  <a href="/grid">Grid</a>
+</nav>
+
+<hr>
+
+<h1>Grid</h1>
+
+<table border="1">
+  <tr>
+    <th>Position</th>
+    <th>Fahrer</th>
+  </tr>
+
+  <% grid.forEach(g => { %>
+    <tr>
+      <td><%= g.position %></td>
+      <td><%= g.driver_id %></td>
+    </tr>
+  <% }) %>
+
+</table>
