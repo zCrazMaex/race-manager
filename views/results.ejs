@@ -82,7 +82,7 @@ function setTeam(raceId, start, el) {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ raceId, start, team })
-  }).then(() => location.reload());
+  });
 }
 
 function setDriver(raceId, start, el) {
@@ -104,7 +104,6 @@ function updatePosition(raceId, start, position) {
 }
 
 function gen(raceId) {
-  fetch('/grid/generate/' + raceId, { method: 'POST' })
-    .then(() => location.reload());
+  fetch('/grid/generate/' + raceId, { method: 'POST' });
 }
 </script>
