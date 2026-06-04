@@ -1,138 +1,107 @@
 const express = require("express");
-const fs = require("fs-extra");
+const fs = require("fs");
 const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-const DATA_FILE = path.join(__dirname, "data.json");
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 
-function loadData() {
-  return fs.readJsonSync(DATA_FILE);
+const DB_PATH = path.join(__dirname, "data/db.json");
+
+function loadDB() {
+  return JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
 }
 
-function saveData(data) {
-  fs.writeJsonSync(DATA_FILE, data, { spaces: 2 });
+function saveDB(db) {
+  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
 }
 
-/* ---------------- INIT ---------------- */
-
-function initRaces(data) {
-  if (!data.races || data.races.length !== 28) {
-    data.races = Array.from({ length: 28 }, (_, i) => ({
-      id: i + 1,
-      results: Array.from({ length: 22 }, (_, p) => ({
-        start: p + 1,
-        team: "",
-        driver: "",
-        position: null
-      }))
-    }));
-
-    saveData(data); // optional, aber wichtig beim ersten Setup
-  }
-}
-
-/* ---------------- ROUTES ---------------- */
-
+/* ------------------ NAV ------------------ */
 app.get("/", (req, res) => res.redirect("/drivers"));
 
+/* ------------------ DRIVERS ------------------ */
 app.get("/drivers", (req, res) => {
-  const data = loadData();
-  res.render("drivers", { teams: data.teams });
+  const db = loadDB();
+  res.render("drivers", { db });
 });
 
-app.get("/grid", (req, res) => {
-  const data = loadData();
-  initRaces(data);
-  res.render("grid", { races: data.races });
+app.post("/team/add", (req, res) => {
+  const db = loadDB();
+  db.teams.push({ name: req.body.team, drivers: [] });
+  saveDB(db);
+  res.redirect("/drivers");
 });
 
-app.get("/results", (req, res) => {
-  const data = loadData();
-  initRaces(data);
-
-  res.render("results", {
-    races: data.races,
-    teams: data.teams   // 👈 WICHTIG hinzufügen
-  });
+app.post("/driver/add", (req, res) => {
+  const db = loadDB();
+  const team = db.teams.find(t => t.name === req.body.team);
+  if (team) team.drivers.push(req.body.driver);
+  saveDB(db);
+  res.redirect("/drivers");
 });
 
-/* ---------------- DRIVER API ---------------- */
-
-app.post("/drivers/add", (req, res) => {
-  const data = loadData();
-  const { team, driver } = req.body;
-
-  const t = data.teams.find(x => x.name === team);
-  if (t && driver) t.drivers.push(driver);
-
-  saveData(data);
-  res.json({ ok: true });
+app.post("/driver/delete", (req, res) => {
+  const db = loadDB();
+  const team = db.teams.find(t => t.name === req.body.team);
+  if (team) {
+    team.drivers = team.drivers.filter(d => d !== req.body.driver);
+  }
+  saveDB(db);
+  res.redirect("/drivers");
 });
 
-app.post("/drivers/delete", (req, res) => {
-  const data = loadData();
-  const { team, driver } = req.body;
+/* ------------------ RACES ------------------ */
+app.get("/races", (req, res) => {
+  const db = loadDB();
 
-  const t = data.teams.find(x => x.name === team);
-  if (t) t.drivers = t.drivers.filter(d => d !== driver);
+  // reverse grid für race 1 aus letzten Ergebnissen
+  const lastRace = db.races[db.races.length - 1];
+  let grid = [];
 
-  saveData(data);
-  res.json({ ok: true });
+  if (lastRace) {
+    grid = [...lastRace.results]
+      .sort((a, b) => a.position - b.position)
+      .reverse()
+      .map((r, i) => ({
+        start: i + 1,
+        team: r.team,
+        driver: r.driver
+      }));
+  } else {
+    db.teams.forEach(t => {
+      t.drivers.forEach(d => grid.push({ team: t.name, driver: d }));
+    });
+    grid = grid.slice(0, 22).map((x, i) => ({
+      start: i + 1,
+      team: x.team,
+      driver: x.driver
+    }));
+  }
+
+  res.render("races", { db, grid });
 });
 
-/* ---------------- RESULT UPDATE ---------------- */
+app.post("/race/save", (req, res) => {
+  const db = loadDB();
 
-app.post("/results/update", (req, res) => {
-  const data = loadData();
-  const { raceId, start, position, team, driver } = req.body;
+  const results = [];
 
-  const race = data.races.find(r => r.id == raceId);
-  if (!race) return res.json({ ok: false });
+  for (let i = 0; i < 22; i++) {
+    results.push({
+      position: Number(req.body[`pos_${i}`]),
+      team: req.body[`team_${i}`],
+      driver: req.body[`driver_${i}`]
+    });
+  }
 
-  const row = race.results.find(r => r.start == start);
-  if (!row) return res.json({ ok: false });
+  db.races.push({ results });
+  saveDB(db);
 
-  if (position !== undefined) row.position = Number(position);
-  if (team !== undefined) row.team = team;
-  if (driver !== undefined) row.driver = driver;
-
-  saveData(data);
-  res.json({ ok: true });
+  res.redirect("/races");
 });
 
-/* ---------------- NEXT GRID ---------------- */
-
-app.post("/grid/generate/:raceId", (req, res) => {
-  const data = loadData();
-  const raceId = Number(req.params.raceId);
-
-  const race = data.races.find(r => r.id === raceId);
-  const next = data.races.find(r => r.id === raceId + 1);
-
-  if (!race || !next) return res.json({ ok: false });
-
-  const sorted = [...race.results]
-    .filter(r => r.position)
-    .sort((a, b) => a.position - b.position);
-
-  next.results = sorted.map((r, i) => ({
-    start: i + 1,
-    team: r.team,
-    driver: r.driver,
-    position: null
-  }));
-
-  saveData(data);
-  res.json({ ok: true });
-});
-
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
-});
+app.listen(PORT, () => console.log("Server läuft auf " + PORT));
