@@ -23,7 +23,7 @@ function saveData(data) {
 /* ---------------- INIT ---------------- */
 
 function initRaces(data) {
-  if (!data.races || data.races.length === 0) {
+  if (!data.races || data.races.length !== 28) {
     data.races = Array.from({ length: 28 }, (_, i) => ({
       id: i + 1,
       results: Array.from({ length: 22 }, (_, p) => ({
@@ -33,6 +33,8 @@ function initRaces(data) {
         position: null
       }))
     }));
+
+    saveData(data); // optional, aber wichtig beim ersten Setup
   }
 }
 
