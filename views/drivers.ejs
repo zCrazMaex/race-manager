@@ -1,47 +1,47 @@
-<nav>
-  <a href="/drivers">Fahrer</a> |
-  <a href="/race">Rennen</a> |
-  <a href="/grid">Grid</a>
-</nav>
+<h1>Fahrerverwaltung</h1>
 
-<hr>
-
-<h1>Teams & Fahrer</h1>
-
-<!-- TEAM HINZUFÜGEN -->
-<form method="POST" action="/teams/add">
-  <input name="name" placeholder="Teamname">
-  <button>Team hinzufügen</button>
-</form>
-
-<hr>
-
-<div style="display:flex; gap:20px;">
-
-  <% teams.forEach(team => { %>
-    <div style="border:1px solid #ccc; padding:10px; width:220px;">
-      <h3><%= team.name %></h3>
-
-      <!-- Fahrer Liste -->
-      <% drivers.filter(d => d.team_id === team.id).forEach(d => { %>
-        <div>
-          <%= d.name %>
-
-          <form method="POST" action="/drivers/delete" style="display:inline;">
-            <input type="hidden" name="id" value="<%= d.id %>">
-            <button>X</button>
-          </form>
-        </div>
+<table>
+  <thead>
+    <tr>
+      <% teams.forEach(t => { %>
+        <th><%= t.name %></th>
       <% }) %>
+    </tr>
+  </thead>
 
-      <!-- Fahrer hinzufügen -->
-      <form method="POST" action="/drivers/add">
-        <input name="name" placeholder="Fahrer">
-        <input type="hidden" name="team_id" value="<%= team.id %>">
-        <button>+</button>
-      </form>
+  <tbody>
+    <tr>
+      <% teams.forEach(t => { %>
+        <td>
+          <% t.drivers.forEach(d => { %>
+            <div>
+              <%= d %>
+              <button onclick="del('<%= t.name %>','<%= d %>')">X</button>
+            </div>
+          <% }) %>
 
-    </div>
-  <% }) %>
+          <input placeholder="Add driver"
+            onkeydown="if(event.key==='Enter') add('<%= t.name %>', this.value)">
+        </td>
+      <% }) %>
+    </tr>
+  </tbody>
+</table>
 
-</div>
+<script>
+function add(team, driver) {
+  fetch('/drivers/add', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({team, driver})
+  }).then(() => location.reload());
+}
+
+function del(team, driver) {
+  fetch('/drivers/delete', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({team, driver})
+  }).then(() => location.reload());
+}
+</script>
