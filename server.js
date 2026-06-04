@@ -49,36 +49,47 @@ app.get("/race", (req, res) => {
 });
 
 app.post("/race/save", (req, res) => {
+
   const raceId = Date.now();
 
-  const entries = Object.entries(req.body);
+  db.all(`
+    SELECT * FROM drivers
+  `, (err, drivers) => {
 
-  entries.forEach(([driver, pos]) => {
-    db.run(
-      "INSERT INTO results (race_id, driver, position) VALUES (?, ?, ?)",
-      [raceId, driver, parseInt(pos)]
+    drivers.forEach(d => {
+      const pos = req.body[`pos_${d.id}`];
+
+      db.run(
+        "INSERT INTO results (race_id, driver_id, position) VALUES (?, ?, ?)",
+        [raceId, d.id, pos]
+      );
+    });
+
+    // GRID GENERATION (FULL REVERSE 1-22)
+    db.all(
+      "SELECT * FROM results WHERE race_id = ? ORDER BY position ASC",
+      [raceId],
+      (err, rows) => {
+
+        const reversed = rows
+          .sort((a,b) => a.position - b.position)
+          .reverse();
+
+        const nextRaceId = raceId + 1;
+
+        reversed.forEach((r, i) => {
+          db.run(
+            "INSERT INTO grid (race_id, driver_id, position) VALUES (?, ?, ?)",
+            [nextRaceId, r.driver_id, i + 1]
+          );
+        });
+
+        res.redirect("/grid/" + nextRaceId);
+      }
     );
+
   });
 
-  // GRID GENERATION (FULL REVERSE 1-22)
-  db.all(
-    "SELECT * FROM results WHERE race_id = ? ORDER BY position ASC",
-    [raceId],
-    (err, rows) => {
-      const reversed = rows
-        .sort((a, b) => a.position - b.position)
-        .reverse(); // FULL REVERSE GRID
-
-      reversed.forEach((r, index) => {
-        db.run(
-          "INSERT INTO grid (race_id, driver, position) VALUES (?, ?, ?)",
-          [raceId + 1, r.driver, index + 1]
-        );
-      });
-
-      res.redirect("/grid/" + (raceId + 1));
-    }
-  );
 });
 
 /* ---------------- GRID ---------------- */
