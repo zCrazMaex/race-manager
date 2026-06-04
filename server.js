@@ -54,7 +54,11 @@ app.get("/grid", (req, res) => {
 app.get("/results", (req, res) => {
   const data = loadData();
   initRaces(data);
-  res.render("results", { races: data.races });
+
+  res.render("results", {
+    races: data.races,
+    teams: data.teams   // 👈 WICHTIG hinzufügen
+  });
 });
 
 /* ---------------- DRIVER API ---------------- */
