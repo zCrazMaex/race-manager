@@ -6,9 +6,19 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+app.get("/", (req, res) => {
+  res.redirect("/drivers");
+});
+
 /* ---------------- HOME ---------------- */
 app.get("/", (req, res) => {
   res.render("index");
+});
+
+/* ---------------- TEAMS ---------------- */
+app.post("/teams/add", (req, res) => {
+  db.run("INSERT INTO teams (name) VALUES (?)", [req.body.name]);
+  res.redirect("/drivers");
 });
 
 /* ---------------- DRIVERS ---------------- */
@@ -19,7 +29,15 @@ app.get("/drivers", (req, res) => {
 });
 
 app.post("/drivers/add", (req, res) => {
-  db.run("INSERT INTO drivers (name) VALUES (?)", req.body.name);
+  db.run(
+    "INSERT INTO drivers (name, team_id) VALUES (?, ?)",
+    [req.body.name, req.body.team_id]
+  );
+  res.redirect("/drivers");
+});
+
+app.post("/drivers/delete", (req, res) => {
+  db.run("DELETE FROM drivers WHERE id = ?", [req.body.id]);
   res.redirect("/drivers");
 });
 
