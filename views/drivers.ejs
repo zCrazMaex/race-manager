@@ -1,47 +1,47 @@
-<h1>Fahrerverwaltung</h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Drivers</title>
+</head>
 
-<table>
-  <thead>
-    <tr>
-      <% teams.forEach(t => { %>
-        <th><%= t.name %></th>
-      <% }) %>
-    </tr>
-  </thead>
+<body>
 
-  <tbody>
-    <tr>
-      <% teams.forEach(t => { %>
-        <td>
-          <% t.drivers.forEach(d => { %>
-            <div>
-              <%= d %>
-              <button onclick="del('<%= t.name %>','<%= d %>')">X</button>
-            </div>
-          <% }) %>
+<nav>
+  <a href="/drivers">Fahrer</a>
+  <a href="/races">Rennergebnisse</a>
+</nav>
 
-          <input placeholder="Add driver"
-            onkeydown="if(event.key==='Enter') add('<%= t.name %>', this.value)">
-        </td>
-      <% }) %>
-    </tr>
-  </tbody>
-</table>
+<h2>Team erstellen</h2>
+<form method="POST" action="/team/add">
+  <input name="team" placeholder="Team Name">
+  <button>Hinzufügen</button>
+</form>
 
-<script>
-function add(team, driver) {
-  fetch('/drivers/add', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({team, driver})
-  }).then(() => location.reload());
-}
+<h2>Fahrer verwalten</h2>
 
-function del(team, driver) {
-  fetch('/drivers/delete', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({team, driver})
-  }).then(() => location.reload());
-}
-</script>
+<% db.teams.forEach(team => { %>
+  <h3><%= team.name %></h3>
+
+  <form method="POST" action="/driver/add">
+    <input type="hidden" name="team" value="<%= team.name %>">
+    <input name="driver" placeholder="Fahrer Name">
+    <button>Hinzufügen</button>
+  </form>
+
+  <ul>
+    <% team.drivers.forEach(driver => { %>
+      <li>
+        <%= driver %>
+        <form method="POST" action="/driver/delete" style="display:inline">
+          <input type="hidden" name="team" value="<%= team.name %>">
+          <input type="hidden" name="driver" value="<%= driver %>">
+          <button>❌</button>
+        </form>
+      </li>
+    <% }) %>
+  </ul>
+
+<% }) %>
+
+</body>
+</html>
