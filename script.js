@@ -20,29 +20,39 @@ async function loadTeams() {
 
     if (saved) {
 
-        teams = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+
+        // 🔥 FIX: alte String-Daten automatisch konvertieren
+        teams = Object.fromEntries(
+            Object.entries(parsed).map(([team, drivers]) => {
+
+                return [
+                    team,
+                    (drivers || []).map(d => {
+
+                        if (typeof d === "string") {
+                            return {
+                                name: d,
+                                stints: []
+                            };
+                        }
+
+                        return {
+                            name: d.name || "Unknown",
+                            stints: d.stints || []
+                        };
+                    })
+                ];
+            })
+        );
 
     } else {
 
-        try {
-            const res = await fetch("drivers.json");
+        const res = await fetch("drivers.json");
+        teams = await res.json();
 
-            if (!res.ok) {
-                throw new Error("drivers.json konnte nicht geladen werden");
-            }
-
-            teams = await res.json();
-
-            saveTeams();
-
-        } catch (err) {
-            console.error("FEHLER beim Laden:", err);
-
-            teams = {};
-        }
+        saveTeams();
     }
-
-    console.log("TEAMS GELADEN:", teams);
 
     renderDriverOverview();
     createResultsTable();
