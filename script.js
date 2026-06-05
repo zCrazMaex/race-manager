@@ -258,11 +258,16 @@ function calculateReverseGrid() {
   rows.forEach(row => {
     const team = row.querySelector(".team")?.value;
     const driver = row.querySelector(".driver")?.value;
-    const place = Number(row.querySelector(".place")?.value);
+    const place = row.querySelector(".place")?.value;
 
-    if (!team || !driver || !place) return;
+    if (!team || !driver || place === "" || place === null) return;
 
-    results.push({ stint, team, driver, place });
+    results.push({
+      stint,
+      team,
+      driver,
+      place: Number(place)
+    });
   });
 
   lastSortedResults = results.sort((a, b) => a.place - b.place);
@@ -281,28 +286,28 @@ function renderNextGrid(sortedResults) {
 
   let startPos = 1;
 
-  // 🧠 WICHTIG: Verbrauchs-Tracking pro Render
   const usedDriversPerTeam = {};
 
   sortedResults.forEach(result => {
     const team = result.team;
 
     if (!usedDriversPerTeam[team]) {
-      usedDriversPerTeam[team] = [];
+      usedDriversPerTeam[team] = new Set();
     }
 
     const drivers = driverState[team] || [];
 
-    // nur Fahrer die für nächsten Stint erlaubt sind UND noch frei sind
+    // stabile Filterung
     const availableDrivers = drivers.filter(d =>
+      Array.isArray(d.stints) &&
       d.stints.includes(nextStint) &&
-      !usedDriversPerTeam[team].includes(d.name)
+      !usedDriversPerTeam[team].has(d.name)
     );
 
-    const driver = availableDrivers[0];
+    const driver = availableDrivers.length > 0 ? availableDrivers[0] : null;
 
     if (driver) {
-      usedDriversPerTeam[team].push(driver.name);
+      usedDriversPerTeam[team].add(driver.name);
     }
 
     const tr = document.createElement("tr");
