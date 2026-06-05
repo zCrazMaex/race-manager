@@ -177,10 +177,9 @@ function buildResultsTable() {
     const tr = document.createElement("tr");
 
     const teamSelect = document.createElement("select");
-    const stintSelect = document.createElement("select");
     const driverSelect = document.createElement("select");
-
     const placeInput = document.createElement("input");
+
     placeInput.type = "number";
     placeInput.min = 1;
     placeInput.max = 22;
@@ -192,22 +191,15 @@ function buildResultsTable() {
         .map(t => `<option value="${t}">${t}</option>`)
         .join("");
 
-    // --- Stint ---
-    stintSelect.innerHTML =
-      `<option value="">Stint</option>` +
-      [1,2,3,4,5,6,7,8,9,10]
-        .map(s => `<option value="${s}">${s}</option>`)
-        .join("");
-
     // --- Fahrer ---
     driverSelect.innerHTML = `<option value="">Fahrer</option>`;
 
     // =====================
-    // FILTER LOGIK
+    // FILTER (Team + GLOBAL STINT)
     // =====================
     function updateDrivers() {
       const team = teamSelect.value;
-      const stint = Number(stintSelect.value);
+      const stint = Number(document.getElementById("stintInput").value);
 
       driverSelect.innerHTML = `<option value="">Fahrer</option>`;
 
@@ -225,24 +217,24 @@ function buildResultsTable() {
     }
 
     teamSelect.addEventListener("change", updateDrivers);
-    stintSelect.addEventListener("change", updateDrivers);
+    document
+      .getElementById("stintInput")
+      .addEventListener("input", updateDrivers);
 
-    tr.innerHTML = `
-      <td>${i}</td>
-    `;
+    // --- TDs ---
+    const startTd = document.createElement("td");
+    startTd.textContent = i;
 
     const teamTd = document.createElement("td");
-    const stintTd = document.createElement("td");
     const driverTd = document.createElement("td");
     const placeTd = document.createElement("td");
 
     teamTd.appendChild(teamSelect);
-    stintTd.appendChild(stintSelect);
     driverTd.appendChild(driverSelect);
     placeTd.appendChild(placeInput);
 
+    tr.appendChild(startTd);
     tr.appendChild(teamTd);
-    tr.appendChild(stintTd);
     tr.appendChild(driverTd);
     tr.appendChild(placeTd);
 
