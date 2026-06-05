@@ -472,9 +472,9 @@ function swapTeamDrivers(team) {
   const i1 = indices[0];
   const i2 = indices[1];
 
-  const temp = currentGridOrder[i1].driver;
-  currentGridOrder[i1].driver = currentGridOrder[i2].driver;
-  currentGridOrder[i2].driver = temp;
+  const tempPlace = currentGridOrder[i1].place;
+  currentGridOrder[i1].place = currentGridOrder[i2].place;
+  currentGridOrder[i2].place = tempPlace;
 
   renderNextGrid(currentGridOrder);
 }
