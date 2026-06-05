@@ -161,6 +161,7 @@ const teamsData = {
 const driverState = structuredClone(teamsData);
 let results = [];
 let lastSortedResults = [];
+let currentGridOrder = [];
 
 // =====================
 // INIT
@@ -381,7 +382,8 @@ function calculateReverseGrid() {
   return Number(a.place) - Number(b.place);
 });
 
-  renderNextGrid(lastSortedResults);
+  currentGridOrder = [...lastSortedResults];
+renderNextGrid(currentGridOrder);
 }
 
 // =====================
@@ -395,9 +397,8 @@ function renderNextGrid(sortedResults) {
   const nextStint = currentStint + 1;
 
   // 🔥 echtes Reverse Grid
-  const reverseGrid = [...sortedResults]
-    .sort((a, b) => a.place - b.place)
-    .reverse();
+const reverseGrid = [...currentGridOrder]
+  .sort((a, b) => b.place - a.place);
 
   const usedDrivers = new Set();
   let startPos = 1;
@@ -457,10 +458,17 @@ function createSwapButtons() {
 
 
 function swapTeamDrivers(team) {
-  const drivers = driverState[team];
-  if (!drivers || drivers.length < 2) return;
+  const index = currentGridOrder.findIndex(r => r.team === team);
+  if (index === -1) return;
 
-  [drivers[0], drivers[1]] = [drivers[1], drivers[0]];
+  // swap mit nächstem gleichen Team-Eintrag
+  for (let i = index + 1; i < currentGridOrder.length; i++) {
+    if (currentGridOrder[i].team === team) {
+      [currentGridOrder[index], currentGridOrder[i]] =
+        [currentGridOrder[i], currentGridOrder[index]];
+      break;
+    }
+  }
 
-  renderNextGrid(lastSortedResults);
+  renderNextGrid(currentGridOrder);
 }
