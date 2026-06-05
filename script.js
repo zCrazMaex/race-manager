@@ -458,17 +458,23 @@ function createSwapButtons() {
 
 
 function swapTeamDrivers(team) {
-  const index = currentGridOrder.findIndex(r => r.team === team);
-  if (index === -1) return;
+  // alle Einträge dieses Teams im Grid sammeln
+  const indices = [];
 
-  // swap mit nächstem gleichen Team-Eintrag
-  for (let i = index + 1; i < currentGridOrder.length; i++) {
-    if (currentGridOrder[i].team === team) {
-      [currentGridOrder[index], currentGridOrder[i]] =
-        [currentGridOrder[i], currentGridOrder[index]];
-      break;
-    }
-  }
+  currentGridOrder.forEach((r, i) => {
+    if (r.team === team) indices.push(i);
+  });
+
+  // nur sinnvoll wenn mindestens 2 Fahrer im Team im Grid sind
+  if (indices.length < 2) return;
+
+  // Fahrer der ersten beiden Positionen tauschen
+  const i1 = indices[0];
+  const i2 = indices[1];
+
+  const temp = currentGridOrder[i1].driver;
+  currentGridOrder[i1].driver = currentGridOrder[i2].driver;
+  currentGridOrder[i2].driver = temp;
 
   renderNextGrid(currentGridOrder);
 }
