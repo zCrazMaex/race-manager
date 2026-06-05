@@ -1,15 +1,15 @@
 {
   "teams": [
-    { "name": "Mercedes", "drivers": [] },
-    { "name": "Redbull", "drivers": [] },
-    { "name": "Ferrari", "drivers": [] },
+    { "name": "Mercedes", "drivers": ["Itzzwertz", "Eddi"] },
+    { "name": "Redbull", "drivers": ["zCrazMaex", "Luca"] },
+    { "name": "Ferrari", "drivers": ["Juli"] },
     { "name": "McLaren", "drivers": [] },
     { "name": "Aston Martin", "drivers": [] },
     { "name": "Haas", "drivers": [] },
     { "name": "Williams", "drivers": [] },
     { "name": "Audi", "drivers": [] },
     { "name": "Alpine", "drivers": [] },
-    { "name": "VCARB", "drivers": [] },
+    { "name": "VCARB", "drivers": ["Can", "Schoell"] },
     { "name": "Cadillac", "drivers": [] }
   ],
   "races": []
