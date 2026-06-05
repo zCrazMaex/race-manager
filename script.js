@@ -53,6 +53,7 @@ const teamsData = {
 // =====================
 const driverState = structuredClone(teamsData);
 let results = [];
+let lastSortedResults = [];
 
 // =====================
 // INIT
@@ -264,10 +265,9 @@ function calculateReverseGrid() {
     results.push({ stint, team, driver, place });
   });
 
-  // 🟢 richtig sortieren
-  const sorted = results.sort((a, b) => a.place - b.place);
+  lastSortedResults = results.sort((a, b) => a.place - b.place);
 
-  renderNextGrid(sorted);
+  renderNextGrid(lastSortedResults);
 }
 
 // =====================
@@ -277,48 +277,30 @@ function renderNextGrid(sortedResults) {
   const tbody = document.querySelector("#nextGridTable tbody");
   tbody.innerHTML = "";
 
-  const currentStint = Number(document.getElementById("stintInput").value);
-  const nextStint = currentStint + 1;
+  const nextStint = Number(document.getElementById("stintInput").value) + 1;
 
   let startPos = 1;
 
-  // 👉 wir gehen in RENNREIHENFOLGE (WICHTIG!)
   sortedResults.forEach(result => {
     const team = result.team;
-
     const drivers = driverState[team] || [];
 
-    // Fahrer die im nächsten Stint fahren dürfen
     const validDrivers = drivers.filter(d =>
       (d.stints || []).includes(nextStint)
     );
 
-    // fallback
-    if (validDrivers.length === 0) {
-      const tr = document.createElement("tr");
+    // 👉 WICHTIG: genau 1 Fahrer pro Position
+    const driverName = validDrivers[0]?.name ?? "❌ kein Fahrer";
 
-      tr.innerHTML = `
-        <td>${startPos++}</td>
-        <td>${team}</td>
-        <td>❌ kein Fahrer</td>
-      `;
+    const tr = document.createElement("tr");
 
-      tbody.appendChild(tr);
-      return;
-    }
+    tr.innerHTML = `
+      <td>${startPos++}</td>
+      <td>${team}</td>
+      <td>${driverName}</td>
+    `;
 
-    // 👉 WICHTIG: beide Fahrer dürfen existieren → aber auf Position verteilen
-    validDrivers.forEach(driver => {
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${startPos++}</td>
-        <td>${team}</td>
-        <td>${driver.name}</td>
-      `;
-
-      tbody.appendChild(tr);
-    });
+    tbody.appendChild(tr);
   });
 }
 
@@ -347,17 +329,10 @@ function createSwapButtons() {
 
 
 function swapTeamDrivers(team) {
-  const rows = document.querySelectorAll("#nextGridTable tbody tr");
+  const drivers = driverState[team];
+  if (!drivers || drivers.length < 2) return;
 
-  const teamRows = [...rows].filter(r =>
-    r.children[1].textContent === team
-  );
+  [drivers[0], drivers[1]] = [drivers[1], drivers[0]];
 
-  if (teamRows.length < 2) return;
-
-  const driver1 = teamRows[0].children[2].textContent;
-  const driver2 = teamRows[1].children[2].textContent;
-
-  teamRows[0].children[2].textContent = driver2;
-  teamRows[1].children[2].textContent = driver1;
+  renderNextGrid(lastSortedResults);
 }
