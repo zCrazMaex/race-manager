@@ -133,43 +133,14 @@ function renderDriverOverview() {
 // =====================
 // RESULTS TABLE
 // =====================
-function buildResultsTable() {
-  const tbody = document.querySelector("#resultsTable tbody");
-
-  tbody.innerHTML = "";
-
-  for (let i = 1; i <= 22; i++) {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${i}</td>
-      <td>
-        <select class="team"></select>
-      </td>
-      <td>
-        <input class="driver" placeholder="Fahrer">
-      </td>
-      <td>
-        <input class="place" type="number" min="1" max="22">
-      </td>
-    `;
-
-    const teamSelect = tr.querySelector(".team");
-
-    teamSelect.innerHTML =
-      `<option value="">-- Team --</option>` +
-      Object.keys(driverState)
-        .map(t => `<option value="${t}">${t}</option>`)
-        .join("");
-
-    tbody.appendChild(tr);
-  }
-}
+buildResultsTable
 
 // =====================
 // REVERSE GRID
 // =====================
 function calculateReverseGrid() {
+  const stint = document.getElementById("stintInput").value;
+
   const rows = document.querySelectorAll("#resultsTable tbody tr");
 
   results = [];
@@ -182,12 +153,18 @@ function calculateReverseGrid() {
     if (!team || !driver || !place) return;
 
     results.push({
+      stint: stint,   // 👈 jetzt global
       start: index + 1,
       team,
       driver,
       place
     });
   });
+
+  const sorted = [...results].sort((a, b) => a.place - b.place);
+
+  renderNextGrid(sorted);
+}
 
   // sort by finishing position (best first)
   const sorted = [...results].sort((a, b) => a.place - b.place);
