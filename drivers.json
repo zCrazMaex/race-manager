@@ -1,0 +1,51 @@
+{
+
+    "Red Bull": [
+        "Max Mustermann",
+        "Peter Müller"
+    ],
+
+    "Mercedes": [
+        "Fahrer 1",
+        "Fahrer 2"
+    ],
+
+    "Ferrari": [
+        "Fahrer 3",
+        "Fahrer 4"
+    ],
+
+    "McLarren": [
+        "Fahrer 5",
+        "Fahrer 6"
+    ],
+
+    "Haas": [
+        "Rempf",
+        "PlayerMadly"
+    ],
+
+    "Alpine": [
+        "Jonas"
+    ],
+
+    "Williams": [
+        "Rempf",
+        "PlayerMadly"],
+
+    "Audi": [
+        "Rempf",
+        "PlayerMadly"],
+
+    "Cadillac": [
+        "Rempf",
+        "PlayerMadly"],
+
+    "VCARB": [
+        "Rempf",
+        "PlayerMadly"],
+
+    "Aston Martin": [
+        "Rempf",
+        "PlayerMadly"]
+}
