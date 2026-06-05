@@ -19,12 +19,30 @@ async function loadTeams() {
     const saved = localStorage.getItem("teams");
 
     if (saved) {
+
         teams = JSON.parse(saved);
+
     } else {
-        const res = await fetch("drivers.json");
-        teams = await res.json();
-        saveTeams();
+
+        try {
+            const res = await fetch("drivers.json");
+
+            if (!res.ok) {
+                throw new Error("drivers.json konnte nicht geladen werden");
+            }
+
+            teams = await res.json();
+
+            saveTeams();
+
+        } catch (err) {
+            console.error("FEHLER beim Laden:", err);
+
+            teams = {};
+        }
     }
+
+    console.log("TEAMS GELADEN:", teams);
 
     renderDriverOverview();
     createResultsTable();
