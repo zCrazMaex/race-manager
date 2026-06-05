@@ -162,6 +162,7 @@ const driverState = structuredClone(teamsData);
 let results = [];
 let lastSortedResults = [];
 let currentGridOrder = [];
+let driverOverrides = {}; // key: "startPos", value: driverName
 
 // =====================
 // INIT
@@ -358,6 +359,7 @@ function buildResultsTable() {
 // REVERSE GRID
 // =====================
 function calculateReverseGrid() {
+    driverOverrides = {}; // ← Reset bei neuer Berechnung
   const stint = Number(document.getElementById("stintInput").value);
   const rows = document.querySelectorAll("#resultsTable tbody tr");
 
@@ -403,34 +405,44 @@ const reverseGrid = [...currentGridOrder]
   const usedDrivers = new Set();
   let startPos = 1;
 
-  reverseGrid.forEach(result => {
-    const team = result.team;
-    const drivers = driverState[team] || [];
+ reverseGrid.forEach(result => {
+  const team = result.team;
+  const drivers = driverState[team] || [];
 
-    // alle möglichen Fahrer für nächsten Stint
+  const overriddenName = driverOverrides[startPos];
+
+  let assignedName;
+
+  if (overriddenName) {
+    // Override hat Vorrang
+    assignedName = overriddenName;
+    usedDrivers.add(`${team}-${overriddenName}`);
+  } else {
+    // Normal: ersten verfügbaren Fahrer nehmen
     const availableDrivers = drivers.filter(d =>
       d.stints.includes(nextStint) &&
       !usedDrivers.has(`${team}-${d.name}`)
     );
 
-    // 👉 FALLBACK: wenn leer, trotzdem irgendeinen nehmen (optional)
     const driver = availableDrivers[0] || drivers.find(d =>
       d.stints.includes(nextStint)
     );
 
+    assignedName = driver ? driver.name : "❌ kein Fahrer";
+
     if (driver) {
       usedDrivers.add(`${team}-${driver.name}`);
     }
+  }
 
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${startPos++}</td>
-      <td>${team}</td>
-      <td>${driver ? driver.name : "❌ kein Fahrer"}</td>
-    `;
-
-    tbody.appendChild(tr);
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${startPos}</td>
+    <td>${team}</td>
+    <td>${assignedName}</td>
+  `;
+  startPos++;
+  tbody.appendChild(tr);
   });
 }
 
@@ -458,23 +470,23 @@ function createSwapButtons() {
 
 
 function swapTeamDrivers(team) {
-  // 1. alle Einträge dieses Teams im aktuellen Grid holen
-  const teamEntries = currentGridOrder
-    .map((r, i) => ({ ...r, index: i }))
-    .filter(r => r.team === team);
+  // Hole aktuelle Grid-Zeilen dieses Teams (nach startPos)
+  const tbody = document.querySelector("#nextGridTable tbody");
+  const rows = [...tbody.querySelectorAll("tr")];
 
-  // 2. wenn weniger als 2 → nichts zu tauschen
-  if (teamEntries.length < 2) return;
+  const teamRows = rows
+    .map((row, i) => ({ row, pos: i + 1, teamName: row.cells[1].textContent }))
+    .filter(r => r.teamName === team);
 
-  // 3. NIMM DIE ERSTEN 2 POSITIONEN IM GRID
-  const a = teamEntries[0].index;
-  const b = teamEntries[1].index;
+  if (teamRows.length < 2) return;
 
-  // 4. KOMPLETT TAUSCHEN (nicht nur driver oder place!)
-  const temp = { ...currentGridOrder[a] };
-  currentGridOrder[a] = { ...currentGridOrder[b] };
-  currentGridOrder[b] = temp;
+  // Fahrernamen aus der Tabelle lesen
+  const nameA = teamRows[0].row.cells[2].textContent;
+  const nameB = teamRows[1].row.cells[2].textContent;
 
-  // 5. neu rendern
+  // Override: tausche die Namen
+  driverOverrides[teamRows[0].pos] = nameB;
+  driverOverrides[teamRows[1].pos] = nameA;
+
   renderNextGrid(currentGridOrder);
 }
