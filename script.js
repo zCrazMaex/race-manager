@@ -1,404 +1,219 @@
-const TEAMS = [
-    "Red Bull",
-    "Mercedes",
-    "Ferrari",
-    "McLarren",
-    "Haas",
-    "Alpine",
-    "Williams",
-    "Audi",
-    "Cadillac",
-    "VCARB",
-    "Aston Martin"
-];
+// =====================
+// JSON (oder extern geladen)
+// =====================
+const teamsData = {
+  "Red Bull": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "Mercedes": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "Ferrari": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "McLarren": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "Haas": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "Alpine": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "Williams": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "Audi": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "Cadillac": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "VCARB": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ],
+  "Aston Martin": [
+    { name: "Fahrer A", stints: [1,2,3] },
+    { name: "Fahrer B", stints: [1,2,3] }
+  ]
+};
 
-let teams = {};
+// =====================
+// State
+// =====================
+const driverState = structuredClone(teamsData);
+let results = [];
 
-async function loadTeams() {
+// =====================
+// INIT
+// =====================
+document.addEventListener("DOMContentLoaded", () => {
+  initTeamDropdown();
+  renderDriverOverview();
 
-    const saved = localStorage.getItem("teams");
+  document
+    .getElementById("addDriverBtn")
+    .addEventListener("click", addDriver);
 
-    if (saved) {
+  document
+    .getElementById("calculateBtn")
+    .addEventListener("click", calculateReverseGrid);
 
-        const parsed = JSON.parse(saved);
+  buildResultsTable();
+});
 
-        // 🔥 FIX: alte String-Daten automatisch konvertieren
-        teams = Object.fromEntries(
-            Object.entries(parsed).map(([team, drivers]) => {
+// =====================
+// TEAM DROPDOWN
+// =====================
+function initTeamDropdown() {
+  const select = document.getElementById("teamSelect");
 
-                return [
-                    team,
-                    (drivers || []).map(d => {
-
-                        if (typeof d === "string") {
-                            return {
-                                name: d,
-                                stints: []
-                            };
-                        }
-
-                        return {
-                            name: d.name || "Unknown",
-                            stints: d.stints || []
-                        };
-                    })
-                ];
-            })
-        );
-
-    } else {
-
-        const res = await fetch("drivers.json");
-        teams = await res.json();
-
-        saveTeams();
-    }
-
-    renderDriverOverview();
-    createResultsTable();
-    populateTeamSelects();
+  select.innerHTML =
+    `<option value="">-- Team wählen --</option>` +
+    Object.keys(driverState)
+      .map(t => `<option value="${t}">${t}</option>`)
+      .join("");
 }
 
-function saveTeams(){
-    localStorage.setItem("teams", JSON.stringify(teams));
+// =====================
+// DRIVER ADD
+// =====================
+function addDriver() {
+  const team = document.getElementById("teamSelect").value;
+  const name = document.getElementById("driverName").value.trim();
+  const stintsRaw = document.getElementById("stintsInput").value;
+
+  if (!team || !name) return;
+
+  const stints = stintsRaw
+    .split(",")
+    .map(s => Number(s.trim()))
+    .filter(n => !isNaN(n));
+
+  driverState[team].push({ name, stints });
+
+  document.getElementById("driverName").value = "";
+  document.getElementById("stintsInput").value = "";
+
+  renderDriverOverview();
 }
 
-function populateTeamSelects(){
-
-    const addSelect =
-        document.getElementById("teamSelect");
-
-    addSelect.innerHTML = "";
-
-    TEAMS.forEach(team => {
-
-        const option =
-            document.createElement("option");
-
-        option.value = team;
-        option.textContent = team;
-
-        addSelect.appendChild(option);
-    });
-
-    document
-        .querySelectorAll(".team-dropdown")
-        .forEach(select => {
-
-            select.innerHTML =
-                '<option value="">Team wählen</option>';
-
-            TEAMS.forEach(team => {
-
-                const option =
-                    document.createElement("option");
-
-                option.value = team;
-                option.textContent = team;
-
-                select.appendChild(option);
-            });
-        });
-}
-
-function createResultsTable(){
-
-    const tbody =
-        document.querySelector(
-            "#resultsTable tbody"
-        );
-
-    tbody.innerHTML = "";
-
-    for(let i=1;i<=22;i++){
-
-        const row =
-            document.createElement("tr");
-
-        row.innerHTML = `
-            <td>${i}</td>
-
-            <td>
-                <select class="team-dropdown">
-                    <option value="">
-                        Team wählen
-                    </option>
-                </select>
-            </td>
-
-            <td>
-                <select class="driver-dropdown">
-                    <option value="">
-                        Fahrer wählen
-                    </option>
-                </select>
-            </td>
-
-            <td>
-                <input
-                    class="stint-input"
-                    type="number"
-                    min="1"
-                    max="28">
-            </td>
-        `;
-
-        tbody.appendChild(row);
-    }
-
-    populateTeamSelects();
-
-    bindTeamEvents();
-}
-
+// =====================
+// DRIVER OVERVIEW
+// =====================
 function renderDriverOverview() {
+  const container = document.getElementById("driverOverview");
 
-    const container = document.getElementById("driverOverview");
+  container.innerHTML = "";
 
-    if (!container) return;
+  Object.entries(driverState).forEach(([team, drivers]) => {
+    const div = document.createElement("div");
 
-    container.innerHTML = "";
+    div.innerHTML = `
+      <h3>${team}</h3>
+      <ul>
+        ${drivers.map(d => `<li>${d.name} (Stints: ${d.stints.join(",")})</li>`).join("")}
+      </ul>
+    `;
 
-    Object.keys(teams).forEach(team => {
-
-        const div = document.createElement("div");
-
-        let html = `<h3>${team}</h3>`;
-
-        (teams[team] || []).forEach((driver, index) => {
-
-            // 🔥 FIX: alte + neue Struktur kompatibel machen
-            const name =
-                typeof driver === "string"
-                    ? driver
-                    : driver?.name || "Unknown";
-
-            const stints =
-                typeof driver === "string"
-                    ? []
-                    : driver?.stints || [];
-
-            html += `
-                <div style="margin-bottom:5px;">
-                    <b>${name}</b>
-                    <input
-                        value="${stints.join(",")}"
-                        data-team="${team}"
-                        data-index="${index}"
-                        class="stint-edit">
-                </div>
-            `;
-        });
-
-        div.innerHTML = html;
-        container.appendChild(div);
-    });
-
-    document.querySelectorAll(".stint-edit").forEach(input => {
-
-        input.addEventListener("change", function () {
-
-            const team = this.dataset.team;
-            const index = this.dataset.index;
-
-            let val = this.value
-                .split(",")
-                .map(n => parseInt(n.trim()))
-                .filter(n => !isNaN(n));
-
-            // 🔥 FIX: kompatibel speichern
-            if (typeof teams[team][index] === "string") {
-
-                teams[team][index] = {
-                    name: teams[team][index],
-                    stints: val
-                };
-
-            } else {
-                teams[team][index].stints = val;
-            }
-
-            saveTeams();
-        });
-    });
+    container.appendChild(div);
+  });
 }
 
-function getDriversForTeamAndStint(team, stint) {
+// =====================
+// RESULTS TABLE
+// =====================
+function buildResultsTable() {
+  const tbody = document.querySelector("#resultsTable tbody");
 
-    if (!team) return [];
+  tbody.innerHTML = "";
 
-    return (teams[team] || []).filter(driver => {
+  for (let i = 1; i <= 22; i++) {
+    const tr = document.createElement("tr");
 
-        const stints =
-            typeof driver === "string"
-                ? []
-                : driver?.stints || [];
+    tr.innerHTML = `
+      <td>${i}</td>
+      <td>
+        <select class="team"></select>
+      </td>
+      <td>
+        <input class="driver" placeholder="Fahrer">
+      </td>
+      <td>
+        <input class="place" type="number" min="1" max="22">
+      </td>
+    `;
 
-        return stints.includes(stint);
-    });
+    const teamSelect = tr.querySelector(".team");
+
+    teamSelect.innerHTML =
+      `<option value="">-- Team --</option>` +
+      Object.keys(driverState)
+        .map(t => `<option value="${t}">${t}</option>`)
+        .join("");
+
+    tbody.appendChild(tr);
+  }
 }
 
-function bindTeamEvents() {
+// =====================
+// REVERSE GRID
+// =====================
+function calculateReverseGrid() {
+  const rows = document.querySelectorAll("#resultsTable tbody tr");
 
-    document.querySelectorAll("#resultsTable tbody tr").forEach(row => {
+  results = [];
 
-        const teamSelect = row.querySelector(".team-dropdown");
-        const driverSelect = row.querySelector(".driver-dropdown");
-        const stintInput = row.querySelector(".stint-input");
+  rows.forEach((row, index) => {
+    const team = row.querySelector(".team").value;
+    const driver = row.querySelector(".driver").value;
+    const place = Number(row.querySelector(".place").value);
 
-        function updateDrivers() {
+    if (!team || !driver || !place) return;
 
-            const team = teamSelect.value;
-            const stint = parseInt(stintInput.value);
-
-            driverSelect.innerHTML = "<option value=''>Fahrer wählen</option>";
-
-            if (!team || isNaN(stint)) return;
-
-            const drivers = getDriversForTeamAndStint(team, stint);
-
-            drivers.forEach(d => {
-                const opt = document.createElement("option");
-                opt.value = d.name;
-                opt.textContent = `${d.name} (Stints: ${d.stints.join(",")})`;
-                driverSelect.appendChild(opt);
-            });
-        }
-
-        teamSelect.addEventListener("change", updateDrivers);
-        stintInput.addEventListener("input", updateDrivers); // WICHTIG: input statt change
+    results.push({
+      start: index + 1,
+      team,
+      driver,
+      place
     });
+  });
+
+  // sort by finishing position (best first)
+  const sorted = [...results].sort((a, b) => a.place - b.place);
+
+  renderNextGrid(sorted);
 }
 
+// =====================
+// NEXT GRID
+// =====================
+function renderNextGrid(sortedResults) {
+  const tbody = document.querySelector("#nextGridTable tbody");
 
+  tbody.innerHTML = "";
 
-document.getElementById("addDriverBtn").addEventListener("click", () => {
+  const reversed = sortedResults.reverse();
 
-    const team = document.getElementById("teamSelect").value;
-    const name = document.getElementById("driverName").value.trim();
-    const stintsRaw = document.getElementById("stintsInput").value;
+  reversed.forEach((r, i) => {
+    const tr = document.createElement("tr");
 
-    if (!team || !name) return;
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${r.team}</td>
+      <td>${r.driver}</td>
+    `;
 
-    const stints = stintsRaw
-        .split(",")
-        .map(s => parseInt(s.trim()))
-        .filter(n => !isNaN(n));
-
-    teams[team].push({
-        name,
-        stints
-    });
-
-    saveTeams();
-    renderDriverOverview();
-
-    document.getElementById("driverName").value = "";
-    document.getElementById("stintsInput").value = "";
-});
-
-document
-.getElementById("calculateBtn")
-.addEventListener("click", () => {
-
-    const rows =
-        document.querySelectorAll(
-            "#resultsTable tbody tr"
-        );
-
-    let results = [];
-
-    rows.forEach(row => {
-
-        const team =
-            row.querySelector(
-                ".team-dropdown"
-            ).value;
-
-        const driver =
-            row.querySelector(
-                ".driver-dropdown"
-            ).value;
-
-        const position =
-            parseInt(
-                row.querySelector(
-                    "input"
-                ).value
-            );
-
-        if(
-            team &&
-            driver &&
-            !isNaN(position)
-        ){
-            results.push({
-                team,
-                driver,
-                position
-            });
-        }
-    });
-
-    if(results.length !== 22){
-
-        alert(
-            "Bitte alle 22 Fahrer eintragen."
-        );
-
-        return;
-    }
-
-    const positions =
-        results.map(r => r.position);
-
-    const unique =
-        [...new Set(positions)];
-
-    if(unique.length !== 22){
-
-        alert(
-            "Platzierungen dürfen nicht doppelt sein."
-        );
-
-        return;
-    }
-
-    results.sort(
-        (a,b) =>
-        a.position - b.position
-    );
-
-    results.reverse();
-
-    createNextGrid(results);
-});
-
-function createNextGrid(grid){
-
-    const tbody =
-        document.querySelector(
-            "#nextGridTable tbody"
-        );
-
-    tbody.innerHTML = "";
-
-    grid.forEach((entry,index) => {
-
-        const row =
-            document.createElement("tr");
-
-        row.innerHTML = `
-            <td>${index+1}</td>
-            <td>${entry.team}</td>
-            <td>${entry.driver}</td>
-        `;
-
-        tbody.appendChild(row);
-    });
+    tbody.appendChild(tr);
+  });
 }
-
-loadTeams().then(() => {
-    createResultsTable();
-    populateTeamSelects();
-});
