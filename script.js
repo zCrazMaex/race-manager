@@ -126,6 +126,9 @@ function createResultsTable(){
 function renderDriverOverview() {
 
     const container = document.getElementById("driverOverview");
+
+    if (!container) return;
+
     container.innerHTML = "";
 
     Object.keys(teams).forEach(team => {
@@ -134,13 +137,17 @@ function renderDriverOverview() {
 
         let html = `<h3>${team}</h3>`;
 
+        if (!Array.isArray(teams[team])) return;
+
         teams[team].forEach((driver, index) => {
+
+            if (!driver || !driver.name) return;
 
             html += `
                 <div>
                     <b>${driver.name}</b>
                     <input 
-                        value="${driver.stints.join(",")}"
+                        value="${(driver.stints || []).join(",")}"
                         data-team="${team}"
                         data-index="${index}"
                         class="stint-edit">
@@ -188,27 +195,25 @@ function bindTeamEvents() {
 
         function updateDrivers() {
 
-    const team = teamSelect.value;
-    const stint = parseInt(stintInput.value);
+            const team = teamSelect.value;
+            const stint = parseInt(stintInput.value);
 
-    driverSelect.innerHTML = "<option>Fahrer wählen</option>";
+            driverSelect.innerHTML = "<option value=''>Fahrer wählen</option>";
 
-    if (!team || isNaN(stint)) return;
+            if (!team || isNaN(stint)) return;
 
-    const drivers = getDriversForTeamAndStint(team, stint);
+            const drivers = getDriversForTeamAndStint(team, stint);
 
-    drivers.forEach(d => {
-
-        const opt = document.createElement("option");
-        opt.value = d.name;
-        opt.textContent = `${d.name} (Stints: ${d.stints.join(",")})`;
-
-        driverSelect.appendChild(opt);
-    });
-}
+            drivers.forEach(d => {
+                const opt = document.createElement("option");
+                opt.value = d.name;
+                opt.textContent = `${d.name} (Stints: ${d.stints.join(",")})`;
+                driverSelect.appendChild(opt);
+            });
+        }
 
         teamSelect.addEventListener("change", updateDrivers);
-        stintInput.addEventListener("change", updateDrivers);
+        stintInput.addEventListener("input", updateDrivers); // WICHTIG: input statt change
     });
 }
 
@@ -340,6 +345,7 @@ function createNextGrid(grid){
     });
 }
 
-loadTeams();
-createResultsTable();
-populateTeamSelects();
+loadTeams().then(() => {
+    createResultsTable();
+    populateTeamSelects();
+});
