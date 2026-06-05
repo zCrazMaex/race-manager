@@ -14,14 +14,16 @@
 
     <select id="teamSelect"></select>
 
-    <input
-        type="text"
-        id="driverName"
-        placeholder="Fahrername">
+    <input id="driverName" placeholder="Fahrername">
 
-    <button id="addDriverBtn">
-        Fahrer hinzufügen
-    </button>
+    <input id="stintsInput" placeholder="Stints (z.B. 1,2,3)">
+
+    <button id="addDriverBtn">Fahrer Hinzufügen</button>
+</section>
+
+<section class="card">
+    <h2>Fahrerübersicht</h2>
+    <div id="driverOverview"></div>
 </section>
 
 <section class="card">
@@ -30,6 +32,7 @@
     <table id="resultsTable">
         <thead>
             <tr>
+                <th>Stint</th>
                 <th>Startplatz</th>
                 <th>Team</th>
                 <th>Fahrer</th>
