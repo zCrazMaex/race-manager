@@ -281,23 +281,36 @@ function renderNextGrid(sortedResults) {
 
   let startPos = 1;
 
+  // 🧠 WICHTIG: Verbrauchs-Tracking pro Render
+  const usedDriversPerTeam = {};
+
   sortedResults.forEach(result => {
     const team = result.team;
+
+    if (!usedDriversPerTeam[team]) {
+      usedDriversPerTeam[team] = [];
+    }
+
     const drivers = driverState[team] || [];
 
-    const validDrivers = drivers.filter(d =>
-      (d.stints || []).includes(nextStint)
+    // nur Fahrer die für nächsten Stint erlaubt sind UND noch frei sind
+    const availableDrivers = drivers.filter(d =>
+      d.stints.includes(nextStint) &&
+      !usedDriversPerTeam[team].includes(d.name)
     );
 
-    // 👉 WICHTIG: genau 1 Fahrer pro Position
-    const driverName = validDrivers[0]?.name ?? "❌ kein Fahrer";
+    const driver = availableDrivers[0];
+
+    if (driver) {
+      usedDriversPerTeam[team].push(driver.name);
+    }
 
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
       <td>${startPos++}</td>
       <td>${team}</td>
-      <td>${driverName}</td>
+      <td>${driver ? driver.name : "❌ kein Fahrer"}</td>
     `;
 
     tbody.appendChild(tr);
