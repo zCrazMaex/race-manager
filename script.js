@@ -171,32 +171,80 @@ function renderDriverOverview() {
 // =====================
 function buildResultsTable() {
   const tbody = document.querySelector("#resultsTable tbody");
-
   tbody.innerHTML = "";
 
   for (let i = 1; i <= 22; i++) {
     const tr = document.createElement("tr");
 
-    tr.innerHTML = `
-      <td>${i}</td>
-      <td>
-        <select class="team"></select>
-      </td>
-      <td>
-        <input class="driver" placeholder="Fahrer">
-      </td>
-      <td>
-        <input class="place" type="number" min="1" max="22">
-      </td>
-    `;
+    const teamSelect = document.createElement("select");
+    const stintSelect = document.createElement("select");
+    const driverSelect = document.createElement("select");
 
-    const teamSelect = tr.querySelector(".team");
+    const placeInput = document.createElement("input");
+    placeInput.type = "number";
+    placeInput.min = 1;
+    placeInput.max = 22;
 
+    // --- Team ---
     teamSelect.innerHTML =
-      `<option value="">-- Team --</option>` +
+      `<option value="">Team</option>` +
       Object.keys(driverState)
         .map(t => `<option value="${t}">${t}</option>`)
         .join("");
+
+    // --- Stint ---
+    stintSelect.innerHTML =
+      `<option value="">Stint</option>` +
+      [1,2,3,4,5,6,7,8,9,10]
+        .map(s => `<option value="${s}">${s}</option>`)
+        .join("");
+
+    // --- Fahrer ---
+    driverSelect.innerHTML = `<option value="">Fahrer</option>`;
+
+    // =====================
+    // FILTER LOGIK
+    // =====================
+    function updateDrivers() {
+      const team = teamSelect.value;
+      const stint = Number(stintSelect.value);
+
+      driverSelect.innerHTML = `<option value="">Fahrer</option>`;
+
+      if (!team || !stint) return;
+
+      const drivers = driverState[team] || [];
+
+      const validDrivers = drivers.filter(d =>
+        (d.stints || []).includes(stint)
+      );
+
+      driverSelect.innerHTML += validDrivers
+        .map(d => `<option value="${d.name}">${d.name}</option>`)
+        .join("");
+    }
+
+    teamSelect.addEventListener("change", updateDrivers);
+    stintSelect.addEventListener("change", updateDrivers);
+
+    tr.innerHTML = `
+      <td>${i}</td>
+    `;
+
+    const teamTd = document.createElement("td");
+    const stintTd = document.createElement("td");
+    const driverTd = document.createElement("td");
+    const placeTd = document.createElement("td");
+
+    teamTd.appendChild(teamSelect);
+    stintTd.appendChild(stintSelect);
+    driverTd.appendChild(driverSelect);
+    placeTd.appendChild(placeInput);
+
+    tr.appendChild(teamTd);
+    tr.appendChild(stintTd);
+    tr.appendChild(driverTd);
+    tr.appendChild(placeTd);
 
     tbody.appendChild(tr);
   }
