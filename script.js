@@ -180,6 +180,10 @@ function buildResultsTable() {
     const driverSelect = document.createElement("select");
     const placeInput = document.createElement("input");
 
+    teamSelect.classList.add("team");
+    driverSelect.classList.add("driver");
+    placeInput.classList.add("place");
+
     placeInput.type = "number";
     placeInput.min = 1;
     placeInput.max = 22;
@@ -252,9 +256,9 @@ function calculateReverseGrid() {
   results = [];
 
   rows.forEach((row, index) => {
-    const team = row.querySelector("td:nth-child(2) select")?.value;
-    const driver = row.querySelector("td:nth-child(3) select")?.value;
-    const place = Number(row.querySelector("td:nth-child(4) input")?.value);
+    const team = row.querySelector(".team")?.value;
+    const driver = row.querySelector(".driver")?.value;
+    const place = row.querySelector(".place")?.value;
 
     if (!team || !driver || !place) return;
 
@@ -263,10 +267,10 @@ function calculateReverseGrid() {
       start: index + 1,
       team,
       driver,
-      place
+      place: Number(place)
     });
   });
-
+  
   // sort by finishing position (best first)
   const sorted = [...results].sort((a, b) => a.place - b.place);
 
