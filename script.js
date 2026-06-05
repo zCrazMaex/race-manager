@@ -155,17 +155,24 @@ function renderDriverOverview() {
 
         let html = `<h3>${team}</h3>`;
 
-        if (!Array.isArray(teams[team])) return;
+        (teams[team] || []).forEach((driver, index) => {
 
-        teams[team].forEach((driver, index) => {
+            // 🔥 FIX: alte + neue Struktur kompatibel machen
+            const name =
+                typeof driver === "string"
+                    ? driver
+                    : driver?.name || "Unknown";
 
-            if (!driver || !driver.name) return;
+            const stints =
+                typeof driver === "string"
+                    ? []
+                    : driver?.stints || [];
 
             html += `
-                <div>
-                    <b>${driver.name}</b>
-                    <input 
-                        value="${(driver.stints || []).join(",")}"
+                <div style="margin-bottom:5px;">
+                    <b>${name}</b>
+                    <input
+                        value="${stints.join(",")}"
                         data-team="${team}"
                         data-index="${index}"
                         class="stint-edit">
@@ -184,10 +191,22 @@ function renderDriverOverview() {
             const team = this.dataset.team;
             const index = this.dataset.index;
 
-            teams[team][index].stints = this.value
+            let val = this.value
                 .split(",")
                 .map(n => parseInt(n.trim()))
                 .filter(n => !isNaN(n));
+
+            // 🔥 FIX: kompatibel speichern
+            if (typeof teams[team][index] === "string") {
+
+                teams[team][index] = {
+                    name: teams[team][index],
+                    stints: val
+                };
+
+            } else {
+                teams[team][index].stints = val;
+            }
 
             saveTeams();
         });
@@ -198,9 +217,15 @@ function getDriversForTeamAndStint(team, stint) {
 
     if (!team) return [];
 
-    return teams[team].filter(driver =>
-        driver.stints.includes(stint)
-    );
+    return (teams[team] || []).filter(driver => {
+
+        const stints =
+            typeof driver === "string"
+                ? []
+                : driver?.stints || [];
+
+        return stints.includes(stint);
+    });
 }
 
 function bindTeamEvents() {
