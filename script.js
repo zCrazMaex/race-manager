@@ -161,11 +161,6 @@ function calculateReverseGrid() {
     });
   });
 
-  const sorted = [...results].sort((a, b) => a.place - b.place);
-
-  renderNextGrid(sorted);
-}
-
   // sort by finishing position (best first)
   const sorted = [...results].sort((a, b) => a.place - b.place);
 
