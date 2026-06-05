@@ -270,7 +270,9 @@ function calculateReverseGrid() {
     });
   });
 
-  lastSortedResults = results.sort((a, b) => a.place - b.place);
+  lastSortedResults = [...results].sort((a, b) => {
+  return Number(a.place) - Number(b.place);
+});
 
   renderNextGrid(lastSortedResults);
 }
@@ -284,31 +286,26 @@ function renderNextGrid(sortedResults) {
 
   const nextStint = Number(document.getElementById("stintInput").value) + 1;
 
+  // 🔥 Reverse Grid HIER explizit
+  const reverse = [...sortedResults].sort((a, b) => b.place - a.place);
+
   let startPos = 1;
+  const used = {};
 
-  const usedDriversPerTeam = {};
-
-  sortedResults.forEach(result => {
+  reverse.forEach(result => {
     const team = result.team;
 
-    if (!usedDriversPerTeam[team]) {
-      usedDriversPerTeam[team] = new Set();
-    }
+    if (!used[team]) used[team] = new Set();
 
     const drivers = driverState[team] || [];
 
-    // stabile Filterung
-    const availableDrivers = drivers.filter(d =>
-      Array.isArray(d.stints) &&
-      d.stints.includes(nextStint) &&
-      !usedDriversPerTeam[team].has(d.name)
-    );
+    const driver =
+      drivers.find(d =>
+        d.stints.includes(nextStint) &&
+        !used[team].has(d.name)
+      ) || null;
 
-    const driver = availableDrivers.length > 0 ? availableDrivers[0] : null;
-
-    if (driver) {
-      usedDriversPerTeam[team].add(driver.name);
-    }
+    if (driver) used[team].add(driver.name);
 
     const tr = document.createElement("tr");
 
