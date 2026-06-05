@@ -247,20 +247,19 @@ function buildResultsTable() {
 // =====================
 function calculateReverseGrid() {
   const stint = document.getElementById("stintInput").value;
-
   const rows = document.querySelectorAll("#resultsTable tbody tr");
 
   results = [];
 
   rows.forEach((row, index) => {
-    const team = row.querySelector(".team").value;
-    const driver = row.querySelector(".driver").value;
-    const place = Number(row.querySelector(".place").value);
+    const team = row.querySelector("td:nth-child(2) select")?.value;
+    const driver = row.querySelector("td:nth-child(3) select")?.value;
+    const place = Number(row.querySelector("td:nth-child(4) input")?.value);
 
     if (!team || !driver || !place) return;
 
     results.push({
-      stint: stint,   // 👈 jetzt global
+      stint,
       start: index + 1,
       team,
       driver,
