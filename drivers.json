@@ -1,57 +1,46 @@
 {
-
     "Red Bull": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "Mercedes": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "Ferrari": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "McLarren": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "Haas": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "Alpine": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "Williams": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "Audi": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "Cadillac": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "VCARB": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
     ],
-
     "Aston Martin": [
         { "name": "Fahrer A", "stints": [1,2,3] },
         { "name": "Fahrer B", "stints": [1,2,3] }
-    ],
+    ]
 }
