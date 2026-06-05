@@ -19,17 +19,14 @@ async function loadTeams() {
     const saved = localStorage.getItem("teams");
 
     if (saved) {
-
         teams = JSON.parse(saved);
-
     } else {
-
         const res = await fetch("drivers.json");
         teams = await res.json();
-
         saveTeams();
     }
 
+    renderDriverOverview();
     createResultsTable();
     populateTeamSelects();
 }
@@ -111,6 +108,7 @@ function createResultsTable(){
 
             <td>
                 <input
+                    class="stint-input"
                     type="number"
                     min="1"
                     max="22">
@@ -125,71 +123,118 @@ function createResultsTable(){
     bindTeamEvents();
 }
 
-function bindTeamEvents(){
+function renderDriverOverview() {
 
-    document
-        .querySelectorAll(".team-dropdown")
-        .forEach(select => {
+    const container = document.getElementById("driverOverview");
+    container.innerHTML = "";
 
-            select.addEventListener(
-                "change",
-                function(){
+    Object.keys(teams).forEach(team => {
 
-                    const row =
-                        this.closest("tr");
+        const div = document.createElement("div");
 
-                    const driverSelect =
-                        row.querySelector(
-                            ".driver-dropdown"
-                        );
+        let html = `<h3>${team}</h3>`;
 
-                    driverSelect.innerHTML =
-                        '<option value="">Fahrer wählen</option>';
+        teams[team].forEach((driver, index) => {
 
-                    const drivers =
-                        teams[this.value] || [];
-
-                    drivers.forEach(driver => {
-
-                        const option =
-                            document.createElement("option");
-
-                        option.value = driver;
-                        option.textContent = driver;
-
-                        driverSelect.appendChild(option);
-                    });
-                }
-            );
+            html += `
+                <div>
+                    <b>${driver.name}</b>
+                    <input 
+                        value="${driver.stints.join(",")}"
+                        data-team="${team}"
+                        data-index="${index}"
+                        class="stint-edit">
+                </div>
+            `;
         });
+
+        div.innerHTML = html;
+        container.appendChild(div);
+    });
+
+    document.querySelectorAll(".stint-edit").forEach(input => {
+
+        input.addEventListener("change", function () {
+
+            const team = this.dataset.team;
+            const index = this.dataset.index;
+
+            teams[team][index].stints = this.value
+                .split(",")
+                .map(n => parseInt(n.trim()))
+                .filter(n => !isNaN(n));
+
+            saveTeams();
+        });
+    });
 }
 
-document
-.getElementById("addDriverBtn")
-.addEventListener("click", () => {
+function getDriversForTeamAndStint(team, stint) {
 
-    const team =
-        document.getElementById("teamSelect").value;
+    if (!team) return [];
 
-    const driver =
-        document.getElementById("driverName")
-        .value
-        .trim();
+    return teams[team].filter(driver =>
+        driver.stints.includes(stint)
+    );
+}
 
-    if(!driver) return;
+function bindTeamEvents() {
 
-    if(!teams[team].includes(driver)){
+    document.querySelectorAll("#resultsTable tbody tr").forEach(row => {
 
-        teams[team].push(driver);
+        const teamSelect = row.querySelector(".team-dropdown");
+        const driverSelect = row.querySelector(".driver-dropdown");
+        const stintInput = row.querySelector(".stint-input");
 
-        saveTeams();
+        function updateDrivers() {
 
-        alert("Fahrer hinzugefügt");
-    }
+            const team = teamSelect.value;
+            const stint = parseInt(stintInput.value);
 
-    document.getElementById(
-        "driverName"
-    ).value = "";
+            driverSelect.innerHTML = "<option>Fahrer wählen</option>";
+
+            if (!team || isNaN(stint)) return;
+
+            const drivers = getDriversForTeamAndStint(team, stint);
+
+            drivers.forEach(d => {
+                const opt = document.createElement("option");
+                opt.value = d.name;
+                opt.textContent = d.name;
+                driverSelect.appendChild(opt);
+            });
+        }
+
+        teamSelect.addEventListener("change", updateDrivers);
+        stintInput.addEventListener("change", updateDrivers);
+    });
+}
+
+
+
+document.getElementById("addDriverBtn").addEventListener("click", () => {
+
+    const team = document.getElementById("teamSelect").value;
+    const name = document.getElementById("driverName").value.trim();
+    const stintsRaw = document.getElementById("stintsInput").value;
+
+    if (!team || !name) return;
+
+    const stints = stintsRaw
+        .split(",")
+        .map(s => parseInt(s.trim()))
+        .filter(n => !isNaN(n));
+
+    teams[team].push({
+        name,
+        stints
+    });
+
+    saveTeams();
+    renderDriverOverview();
+
+    document.getElementById("driverName").value = "";
+    document.getElementById("stintsInput").value = "";
 });
 
 document
