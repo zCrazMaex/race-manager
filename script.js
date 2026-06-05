@@ -111,7 +111,7 @@ function createResultsTable(){
                     class="stint-input"
                     type="number"
                     min="1"
-                    max="22">
+                    max="28">
             </td>
         `;
 
@@ -188,22 +188,24 @@ function bindTeamEvents() {
 
         function updateDrivers() {
 
-            const team = teamSelect.value;
-            const stint = parseInt(stintInput.value);
+    const team = teamSelect.value;
+    const stint = parseInt(stintInput.value);
 
-            driverSelect.innerHTML = "<option>Fahrer wählen</option>";
+    driverSelect.innerHTML = "<option>Fahrer wählen</option>";
 
-            if (!team || isNaN(stint)) return;
+    if (!team || isNaN(stint)) return;
 
-            const drivers = getDriversForTeamAndStint(team, stint);
+    const drivers = getDriversForTeamAndStint(team, stint);
 
-            drivers.forEach(d => {
-                const opt = document.createElement("option");
-                opt.value = d.name;
-                opt.textContent = d.name;
-                driverSelect.appendChild(opt);
-            });
-        }
+    drivers.forEach(d => {
+
+        const opt = document.createElement("option");
+        opt.value = d.name;
+        opt.textContent = `${d.name} (Stints: ${d.stints.join(",")})`;
+
+        driverSelect.appendChild(opt);
+    });
+}
 
         teamSelect.addEventListener("change", updateDrivers);
         stintInput.addEventListener("change", updateDrivers);
