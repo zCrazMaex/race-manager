@@ -282,32 +282,38 @@ function renderNextGrid(sortedResults) {
 
   let startPos = 1;
 
-  sortedResults.forEach(r => {
-    const drivers = driverState[r.team] || [];
+  // 👉 wir gehen in RENNREIHENFOLGE (WICHTIG!)
+  sortedResults.forEach(result => {
+    const team = result.team;
 
-    // alle Fahrer, die für nextStint gültig sind
+    const drivers = driverState[team] || [];
+
+    // Fahrer die im nächsten Stint fahren dürfen
     const validDrivers = drivers.filter(d =>
       (d.stints || []).includes(nextStint)
     );
 
+    // fallback
     if (validDrivers.length === 0) {
       const tr = document.createElement("tr");
+
       tr.innerHTML = `
         <td>${startPos++}</td>
-        <td>${r.team}</td>
+        <td>${team}</td>
         <td>❌ kein Fahrer</td>
       `;
+
       tbody.appendChild(tr);
       return;
     }
 
-    // 👉 ALLE Fahrer anzeigen (nicht nur einen!)
+    // 👉 WICHTIG: beide Fahrer dürfen existieren → aber auf Position verteilen
     validDrivers.forEach(driver => {
       const tr = document.createElement("tr");
 
       tr.innerHTML = `
         <td>${startPos++}</td>
-        <td>${r.team}</td>
+        <td>${team}</td>
         <td>${driver.name}</td>
       `;
 
