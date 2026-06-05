@@ -133,7 +133,38 @@ function renderDriverOverview() {
 // =====================
 // RESULTS TABLE
 // =====================
-buildResultsTable
+function buildResultsTable() {
+  const tbody = document.querySelector("#resultsTable tbody");
+
+  tbody.innerHTML = "";
+
+  for (let i = 1; i <= 22; i++) {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${i}</td>
+      <td>
+        <select class="team"></select>
+      </td>
+      <td>
+        <input class="driver" placeholder="Fahrer">
+      </td>
+      <td>
+        <input class="place" type="number" min="1" max="22">
+      </td>
+    `;
+
+    const teamSelect = tr.querySelector(".team");
+
+    teamSelect.innerHTML =
+      `<option value="">-- Team --</option>` +
+      Object.keys(driverState)
+        .map(t => `<option value="${t}">${t}</option>`)
+        .join("");
+
+    tbody.appendChild(tr);
+  }
+}
 
 // =====================
 // REVERSE GRID
