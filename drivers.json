@@ -1,51 +1,57 @@
 {
 
     "Red Bull": [
-        "Max Mustermann",
-        "Peter Müller"
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
     ],
 
     "Mercedes": [
-        "Fahrer 1",
-        "Fahrer 2"
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
     ],
 
     "Ferrari": [
-        "Fahrer 3",
-        "Fahrer 4"
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
     ],
 
     "McLarren": [
-        "Fahrer 5",
-        "Fahrer 6"
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
     ],
 
     "Haas": [
-        "Rempf",
-        "PlayerMadly"
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
     ],
 
     "Alpine": [
-        "Jonas"
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
     ],
 
     "Williams": [
-        "Rempf",
-        "PlayerMadly"],
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
+    ],
 
     "Audi": [
-        "Rempf",
-        "PlayerMadly"],
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
+    ],
 
     "Cadillac": [
-        "Rempf",
-        "PlayerMadly"],
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
+    ],
 
     "VCARB": [
-        "Rempf",
-        "PlayerMadly"],
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
+    ],
 
     "Aston Martin": [
-        "Rempf",
-        "PlayerMadly"]
+        { "name": "Fahrer A", "stints": [1,2,3] },
+        { "name": "Fahrer B", "stints": [1,2,3] }
+    ],
 }
