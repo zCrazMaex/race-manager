@@ -284,28 +284,35 @@ function renderNextGrid(sortedResults) {
   const tbody = document.querySelector("#nextGridTable tbody");
   tbody.innerHTML = "";
 
-  const nextStint = Number(document.getElementById("stintInput").value) + 1;
+  const currentStint = Number(document.getElementById("stintInput").value);
+  const nextStint = currentStint + 1;
 
-  // 🔥 Reverse Grid HIER explizit
-  const reverse = [...sortedResults].sort((a, b) => b.place - a.place);
+  // 🔥 echtes Reverse Grid
+  const reverseGrid = [...sortedResults]
+    .sort((a, b) => a.place - b.place)
+    .reverse();
 
+  const usedDrivers = new Set();
   let startPos = 1;
-  const used = {};
 
-  reverse.forEach(result => {
+  reverseGrid.forEach(result => {
     const team = result.team;
-
-    if (!used[team]) used[team] = new Set();
-
     const drivers = driverState[team] || [];
 
-    const driver =
-      drivers.find(d =>
-        d.stints.includes(nextStint) &&
-        !used[team].has(d.name)
-      ) || null;
+    // alle möglichen Fahrer für nächsten Stint
+    const availableDrivers = drivers.filter(d =>
+      d.stints.includes(nextStint) &&
+      !usedDrivers.has(`${team}-${d.name}`)
+    );
 
-    if (driver) used[team].add(driver.name);
+    // 👉 FALLBACK: wenn leer, trotzdem irgendeinen nehmen (optional)
+    const driver = availableDrivers[0] || drivers.find(d =>
+      d.stints.includes(nextStint)
+    );
+
+    if (driver) {
+      usedDrivers.add(`${team}-${driver.name}`);
+    }
 
     const tr = document.createElement("tr");
 
@@ -318,7 +325,6 @@ function renderNextGrid(sortedResults) {
     tbody.appendChild(tr);
   });
 }
-
 
 // =====================
 // SWAP DRIVERS
