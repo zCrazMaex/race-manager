@@ -113,20 +113,56 @@ function addDriver() {
 // =====================
 function renderDriverOverview() {
   const container = document.getElementById("driverOverview");
-
   container.innerHTML = "";
 
   Object.entries(driverState).forEach(([team, drivers]) => {
-    const div = document.createElement("div");
+    const teamBlock = document.createElement("div");
 
-    div.innerHTML = `
-      <h3>${team}</h3>
-      <ul>
-        ${drivers.map(d => `<li>${d.name} (Stints: ${d.stints.join(",")})</li>`).join("")}
-      </ul>
-    `;
+    teamBlock.innerHTML = `<h3>${team}</h3>`;
 
-    container.appendChild(div);
+    drivers.forEach((driver, driverIndex) => {
+      const driverBox = document.createElement("div");
+      driverBox.style.marginBottom = "12px";
+
+      const inputs = [];
+
+      for (let i = 0; i < 10; i++) {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = 1;
+        input.max = 22;
+        input.style.width = "60px";
+        input.style.marginRight = "5px";
+
+        // vorhandene Werte einsetzen oder leer lassen
+        input.value = driver.stints[i] ?? "";
+
+        input.addEventListener("input", () => {
+          const parentStints = [];
+
+          driverBox.querySelectorAll("input").forEach(inp => {
+            const val = Number(inp.value);
+            if (!isNaN(val) && inp.value !== "") {
+              parentStints.push(val);
+            }
+          });
+
+          driverState[team][driverIndex].stints = parentStints;
+        });
+
+        inputs.push(input);
+        driverBox.appendChild(input);
+      }
+
+      const label = document.createElement("div");
+      label.textContent = driver.name;
+      label.style.fontWeight = "bold";
+
+      driverBox.prepend(label);
+      teamBlock.appendChild(driverBox);
+    });
+
+    container.appendChild(teamBlock);
   });
 }
 
