@@ -249,29 +249,23 @@ function buildResultsTable() {
 // REVERSE GRID
 // =====================
 function calculateReverseGrid() {
-  const stint = document.getElementById("stintInput").value;
+  const stint = Number(document.getElementById("stintInput").value);
   const rows = document.querySelectorAll("#resultsTable tbody tr");
 
   results = [];
 
-  rows.forEach((row, index) => {
+  rows.forEach(row => {
     const team = row.querySelector(".team")?.value;
     const driver = row.querySelector(".driver")?.value;
-    const place = row.querySelector(".place")?.value;
+    const place = Number(row.querySelector(".place")?.value);
 
     if (!team || !driver || !place) return;
 
-    results.push({
-      stint,
-      start: index + 1,
-      team,
-      driver,
-      place: Number(place)
-    });
+    results.push({ stint, team, driver, place });
   });
-  
-  // sort by finishing position (best first)
-  const sorted = [...results].sort((a, b) => a.place - b.place);
+
+  // 🟢 richtig sortieren
+  const sorted = results.sort((a, b) => a.place - b.place);
 
   renderNextGrid(sorted);
 }
@@ -286,37 +280,35 @@ function renderNextGrid(sortedResults) {
   const currentStint = Number(document.getElementById("stintInput").value);
   const nextStint = currentStint + 1;
 
-  // wir merken uns aktuelle Zuordnung pro Team
-  const teamMap = {};
+  let startPos = 1;
 
   sortedResults.forEach(r => {
-    if (!teamMap[r.team]) {
-      teamMap[r.team] = [];
-    }
-
-    // prüfen ob Fahrer für nextStint berechtigt ist
     const drivers = driverState[r.team] || [];
 
+    // alle Fahrer, die für nextStint gültig sind
     const validDrivers = drivers.filter(d =>
       (d.stints || []).includes(nextStint)
     );
 
-    teamMap[r.team].push({
-      team: r.team,
-      driver: validDrivers.length ? validDrivers[0].name : "❌ kein Fahrer"
-    });
-  });
+    if (validDrivers.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${startPos++}</td>
+        <td>${r.team}</td>
+        <td>❌ kein Fahrer</td>
+      `;
+      tbody.appendChild(tr);
+      return;
+    }
 
-  let startPos = 1;
-
-  Object.entries(teamMap).forEach(([team, drivers]) => {
-    drivers.forEach((entry, index) => {
+    // 👉 ALLE Fahrer anzeigen (nicht nur einen!)
+    validDrivers.forEach(driver => {
       const tr = document.createElement("tr");
 
       tr.innerHTML = `
         <td>${startPos++}</td>
-        <td>${entry.team}</td>
-        <td class="driver-cell">${entry.driver}</td>
+        <td>${r.team}</td>
+        <td>${driver.name}</td>
       `;
 
       tbody.appendChild(tr);
