@@ -61,17 +61,16 @@ document.addEventListener("DOMContentLoaded", () => {
   initTeamDropdown();
   renderDriverOverview();
 
-  document
-    .getElementById("addDriverBtn")
+  document.getElementById("addDriverBtn")
     .addEventListener("click", addDriver);
 
-  document
-    .getElementById("calculateBtn")
+  document.getElementById("calculateBtn")
     .addEventListener("click", calculateReverseGrid);
 
   buildResultsTable();
-});
 
+  createSwapButtons(); // 👈 NEU
+});
 // =====================
 // TEAM DROPDOWN
 // =====================
@@ -282,20 +281,85 @@ function calculateReverseGrid() {
 // =====================
 function renderNextGrid(sortedResults) {
   const tbody = document.querySelector("#nextGridTable tbody");
-
   tbody.innerHTML = "";
 
-  const reversed = sortedResults.reverse();
+  const currentStint = Number(document.getElementById("stintInput").value);
+  const nextStint = currentStint + 1;
 
-  reversed.forEach((r, i) => {
-    const tr = document.createElement("tr");
+  // wir merken uns aktuelle Zuordnung pro Team
+  const teamMap = {};
 
-    tr.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${r.team}</td>
-      <td>${r.driver}</td>
-    `;
+  sortedResults.forEach(r => {
+    if (!teamMap[r.team]) {
+      teamMap[r.team] = [];
+    }
 
-    tbody.appendChild(tr);
+    // prüfen ob Fahrer für nextStint berechtigt ist
+    const drivers = driverState[r.team] || [];
+
+    const validDrivers = drivers.filter(d =>
+      (d.stints || []).includes(nextStint)
+    );
+
+    teamMap[r.team].push({
+      team: r.team,
+      driver: validDrivers.length ? validDrivers[0].name : "❌ kein Fahrer"
+    });
   });
+
+  let startPos = 1;
+
+  Object.entries(teamMap).forEach(([team, drivers]) => {
+    drivers.forEach((entry, index) => {
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${startPos++}</td>
+        <td>${entry.team}</td>
+        <td class="driver-cell">${entry.driver}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+
+// =====================
+// SWAP DRIVERS
+// =====================
+function createSwapButtons() {
+  const container = document.getElementById("nextGridTable");
+
+  // falls schon Buttons existieren entfernen
+  document.querySelectorAll(".swap-btn").forEach(b => b.remove());
+
+  Object.keys(driverState).forEach(team => {
+    const btn = document.createElement("button");
+    btn.textContent = `${team}: Fahrer tauschen`;
+    btn.classList.add("swap-btn");
+
+    btn.style.margin = "5px";
+
+    btn.addEventListener("click", () => swapTeamDrivers(team));
+
+    container.parentNode.insertBefore(btn, container);
+  });
+}
+
+
+function swapTeamDrivers(team) {
+  const rows = document.querySelectorAll("#nextGridTable tbody tr");
+
+  const teamRows = [...rows].filter(r =>
+    r.children[1].textContent === team
+  );
+
+  if (teamRows.length < 2) return;
+
+  const driver1 = teamRows[0].children[2].textContent;
+  const driver2 = teamRows[1].children[2].textContent;
+
+  teamRows[0].children[2].textContent = driver2;
+  teamRows[1].children[2].textContent = driver1;
 }
